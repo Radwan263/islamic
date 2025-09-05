@@ -1,3 +1,14 @@
+# القسم الأول: تعليمات البناء (لحل مشكلة النشر)
+[build]
+  command = "pnpm install --no-frozen-lockfile && pnpm run build"
+  publish = "dist"
+
+[build.processing]
+  skip_install_dependencies = true
+
+# اترك مسافة سطر فارغ للفصل والترتيب
+
+# القسم الثاني: تعليمات إعادة التوجيه (لربط الواجهة الخلفية)
 [[redirects]]
   from = "/api/*"
   to = "https://radwan2632.pythonanywhere.com/api/:splat"
