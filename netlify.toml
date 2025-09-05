@@ -1,4 +1,1 @@
-[[redirects]]
-  from = "/api/*"
-  to = "https://radwan2632.pythonanywhere.com/api/:splat"
-  status = 200
+[build]\n  command = "npm install --legacy-peer-deps && npm run build"
