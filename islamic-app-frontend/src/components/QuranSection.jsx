@@ -1,107 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './SharedLayout.css'; // <-- 1. استيراد ملف التصميم المشترك
 
-const QuranSection = () => {
+function QuranSection() {
   const [surahs, setSurahs] = useState([]);
-  const [selectedSurah, setSelectedSurah] = useState(null);
-  const [surahDetails, setSurahDetails] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    // جلب قائمة السور من واجهة برمجة التطبيقات
     axios.get('https://api.alquran.cloud/v1/surah')
       .then(response => {
         setSurahs(response.data.data);
+        setLoading(false);
       })
       .catch(error => {
         console.error("Error fetching surahs:", error);
-      });
-  }, []);
-
-  const handleSurahChange = (event) => {
-    const surahNumber = event.target.value;
-    setSelectedSurah(surahNumber);
-    setLoading(true);
-    setSurahDetails(null);
-
-    axios.get(`https://api.alquran.cloud/v1/surah/${surahNumber}`)
-      .then(response => {
-        setSurahDetails(response.data.data);
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error("Error fetching surah details:", error);
+        setError("حدث خطأ أثناء تحميل قائمة السور. يرجى المحاولة مرة أخرى.");
         setLoading(false);
       });
-  };
+  }, []); // useEffect يعمل مرة واحدة فقط عند تحميل المكون
 
-  // --- 2. تغليف كل شيء بالحاويات التصميمية الجديدة ---
   return (
-    <div className="page-container">
-      <div className="content-wrapper">
-        <h1 style={{ fontFamily: 'Amiri, serif', color: '#5d4037', textAlign: 'center' }}>
-          القرآن الكريم
-        </h1>
+    <div dir="rtl" className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-4xl mx-auto">
         
-        <select onChange={handleSurahChange} defaultValue="" style={selectStyle}>
-          <option value="" disabled>اختر سورة...</option>
-          {surahs.map(surah => (
-            <option key={surah.number} value={surah.number}>
-              {surah.number} - {surah.name} ({surah.englishName})
-            </option>
-          ))}
-        </select>
+        {/* رأس الصفحة مع العنوان */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold text-teal-700" style={{ fontFamily: 'Amiri, serif' }}>
+            القرآن الكريم
+          </h1>
+          <p className="text-gray-500 mt-2">
+            قائمة سور القرآن الكريم (114 سورة)
+          </p>
+        </div>
 
-        {loading && <p style={{ textAlign: 'center' }}>جاري التحميل...</p>}
+        {/* عرض رسالة التحميل أو الخطأ */}
+        {loading && <p className="text-center text-gray-500">جاري تحميل السور...</p>}
+        {error && <p className="text-center text-red-500">{error}</p>}
 
-        {surahDetails && (
-          <div style={{ marginTop: '20px', direction: 'rtl' }}>
-            <h2 style={{ fontFamily: 'Amiri, serif', color: '#5d4037' }}>
-              {surahDetails.name}
-            </h2>
-            <div style={ayahContainerStyle}>
-              {surahDetails.ayahs.map(ayah => (
-                <p key={ayah.number} style={ayahStyle}>
-                  {ayah.text} <span style={ayahNumberStyle}>({ayah.numberInSurah})</span>
+        {/* شبكة عرض السور */}
+        {!loading && !error && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {surahs.map(surah => (
+              <div 
+                key={surah.number} 
+                className="bg-white rounded-lg shadow-md p-4 flex flex-col items-center justify-center text-center hover:shadow-xl hover:bg-teal-50 transition-all duration-300 cursor-pointer"
+              >
+                <p className="text-lg font-semibold text-teal-800">{surah.number}. {surah.name}</p>
+                <p className="text-sm text-gray-600">{surah.englishName}</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  {surah.revelationType === 'Meccan' ? 'مكية' : 'مدنية'} - {surah.numberOfAyahs} آيات
                 </p>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
     </div>
   );
-};
-
-// --- 3. إضافة بعض التنسيقات المباشرة لتحسين المظهر الداخلي ---
-const selectStyle = {
-  width: '100%',
-  padding: '10px',
-  fontSize: '16px',
-  borderRadius: '8px',
-  border: '1px solid #ccc',
-  fontFamily: 'Amiri, serif',
-  marginBottom: '20px'
-};
-
-const ayahContainerStyle = {
-  borderTop: '2px solid #e6c56c',
-  paddingTop: '15px',
-  marginTop: '15px'
-};
-
-const ayahStyle = {
-  fontSize: '22px',
-  lineHeight: '2.5',
-  borderBottom: '1px solid #eee',
-  paddingBottom: '15px',
-  marginBottom: '15px'
-};
-
-const ayahNumberStyle = {
-  color: '#3182ce',
-  fontSize: '18px',
-  marginRight: '10px'
-};
+}
 
 export default QuranSection;
