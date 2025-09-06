@@ -1,100 +1,63 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './QuranSection.css'; // سنضيف بعض التنسيقات لاحقًا
 
-const QuranSection = () => {
+function QuranSection() {
   const [surahs, setSurahs] = useState([]);
-  const [selectedSurah, setSelectedSurah] = useState(null);
-  const [ayahs, setAyahs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // useRef لتخزين مراجع عناصر السور
-  const surahRefs = useRef({});
-
-  // 1. جلب قائمة السور عند تحميل المكون لأول مرة
   useEffect(() => {
-    const fetchSurahs = async () => {
-      try {
-        const response = await axios.get('https://api.alquran.cloud/v1/surah');
+    // جلب قائمة السور من واجهة برمجة التطبيقات
+    axios.get('https://api.alquran.cloud/v1/surah')
+      .then(response => {
         setSurahs(response.data.data);
         setLoading(false);
-      } catch (err) {
-        setError('فشل تحميل قائمة السور. يرجى المحاولة مرة أخرى.');
+      })
+      .catch(error => {
+        console.error("Error fetching surahs:", error);
+        setError("حدث خطأ أثناء تحميل قائمة السور. يرجى المحاولة مرة أخرى.");
         setLoading(false);
-      }
-    };
-    fetchSurahs();
-  }, []);
-
-  // 2. جلب آيات السورة المحددة
-  const fetchAyahs = async (surahNumber) => {
-    try {
-      const response = await axios.get(`https://api.alquran.cloud/v1/surah/${surahNumber}`);
-      setAyahs(response.data.data.ayahs);
-    } catch (err) {
-      setError('فشل تحميل آيات السورة.');
-    }
-  };
-
-  // 3. التعامل مع تغيير السورة من القائمة المنسدلة
-  const handleSurahChange = (event) => {
-    const surahNumber = event.target.value;
-    if (surahNumber) {
-      const surah = surahs.find(s => s.number == surahNumber);
-      setSelectedSurah(surah);
-      fetchAyahs(surahNumber);
-      
-      // الانتقال السلس إلى بداية قسم عرض الآيات
-      const ayahsContainer = document.getElementById('ayahs-display-container');
-      if (ayahsContainer) {
-        ayahsContainer.scrollIntoView({ behavior: 'smooth' });
-      }
-    } else {
-      setSelectedSurah(null);
-      setAyahs([]);
-    }
-  };
-
-  if (loading) return <p className="quran-status">جاري تحميل البيانات...</p>;
-  if (error) return <p className="quran-status error">{error}</p>;
+      });
+  }, []); // useEffect يعمل مرة واحدة فقط عند تحميل المكون
 
   return (
-    <div className="quran-section-container">
-      <h2 className="quran-title">القرآن الكريم</h2>
+    <div dir="rtl" className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* رأس الصفحة مع العنوان */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold text-teal-700" style={{ fontFamily: 'Amiri, serif' }}>
+            القرآن الكريم
+          </h1>
+          <p className="text-gray-500 mt-2">
+            قائمة سور القرآن الكريم (114 سورة)
+          </p>
+        </div>
 
-      {/* --- القائمة المنسدلة لاختيار السورة --- */}
-      <div className="surah-selector-container">
-        <label htmlFor="surah-select">اختر السورة:</label>
-        <select id="surah-select" onChange={handleSurahChange} defaultValue="">
-          <option value="" disabled>-- قائمة السور --</option>
-          {surahs.map(surah => (
-            <option key={surah.number} value={surah.number}>
-              {surah.number}. {surah.name} ({surah.revelationType === 'Meccan' ? 'مكية' : 'مدنية'})
-            </option>
-          ))}
-        </select>
-      </div>
+        {/* عرض رسالة التحميل أو الخطأ */}
+        {loading && <p className="text-center text-gray-500">جاري تحميل السور...</p>}
+        {error && <p className="text-center text-red-500">{error}</p>}
 
-      {/* --- قسم عرض الآيات للسورة المختارة --- */}
-      <div id="ayahs-display-container">
-        {selectedSurah && (
-          <div className="surah-content">
-            <h3>سورة {selectedSurah.name}</h3>
-            {/* إضافة البسملة إذا لم تكن السورة هي التوبة */}
-            {selectedSurah.number !== 9 && (
-              <p className="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
-            )}
-            {ayahs.map(ayah => (
-              <p key={ayah.number} className="ayah-text">
-                {ayah.text} <span className="ayah-number">({ayah.numberInSurah})</span>
-              </p>
+        {/* شبكة عرض السور */}
+        {!loading && !error && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {surahs.map(surah => (
+              <div 
+                key={surah.number} 
+                className="bg-white rounded-lg shadow-md p-4 flex flex-col items-center justify-center text-center hover:shadow-xl hover:bg-teal-50 transition-all duration-300 cursor-pointer"
+              >
+                <p className="text-lg font-semibold text-teal-800">{surah.number}. {surah.name}</p>
+                <p className="text-sm text-gray-600">{surah.englishName}</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  {surah.revelationType === 'Meccan' ? 'مكية' : 'مدنية'} - {surah.numberOfAyahs} آيات
+                </p>
+              </div>
             ))}
           </div>
         )}
       </div>
     </div>
   );
-};
+}
 
 export default QuranSection;
