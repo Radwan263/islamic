@@ -1,0 +1,14 @@
+# هذا الملف هو المتحكم الوحيد الآن
+[build]
+  # 1. قم بالتثبيت (سيتم إنشاء ملف lock جديد وسليم)
+  # 2. قم بالبناء
+  command = "pnpm install && pnpm run build"
+  
+  # 3. حدد مكان المخرجات
+  publish = "dist"
+
+# هذا القسم ضروري لتطبيقك ليعمل
+[[redirects]]
+  from = "/api/*"
+  to = "https://radwan2632.pythonanywhere.com/api/:splat"
+  status = 200
